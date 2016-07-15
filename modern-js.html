@@ -35,13 +35,12 @@ out at es6 fiddle](http://www.es6fiddle.net)
 
 ---
 
-* Classes
+# Classes
 
 The most obvious one is that there is a "blessed" way to create classes
 instead of futzing with prototypes etc.
 
-
-```
+```js
 class Foo {
   static foo() {
     return "this is an inherited classmethod";
@@ -74,7 +73,7 @@ console.log(McFoo.foo()); // "this is an...
 
 ES7 property initializers are a proposal that add more familiar syntax
 
-```
+```js
 class Foo {
   static baz = 2;
   bar = 3;
@@ -84,9 +83,11 @@ This [babel
 transform](http://babeljs.io/docs/plugins/transform-class-properties/) allows
 us to use it today
 
+---
+
 # Lambdas ("arrow" functions)
 
-```
+```js
 var x = (y) => 2*y;
 console.log(x(2)); // 4
 ```
@@ -95,7 +96,7 @@ console.log(x(2)); // 4
 
 # String formatting (interpolation, or templating)
 
-```
+```js
 var name = "Bob", time = "today";
 `Hello ${name}, how are you ${time}?`
 ```
@@ -105,17 +106,16 @@ var name = "Bob", time = "today";
 
 # Unpacking ("destructuring") assignments
 
-```
+```js
 var [a, ,b] = [1,2,3]
 var {a, b} = {"a": 1, "b": 3, "c": 2}
 ```
 
 ---
 
-
 # "Rest" operator: ...
 
-```
+```js
 function more(a, b, ...theRest) {
   // args is array of the arguments except a, b
   console.log(theRest.length);
@@ -126,11 +126,10 @@ more(1,2,3,4); // 2
 
 ---
 
-
 # "spread" operator, which is the inverse of the "rest" operator, but looks
 identical
 
-```
+```js
 var parts = ['shoulders', 'knees'];
 var lyrics = ['head', ...parts, 'and', 'toes']; // ["head", "shoulders",
 "knees", "and", "toes"]
@@ -152,13 +151,13 @@ props](https://github.com/finventures/fin-core-beta/wiki/Javascript-Warnings))
 `let` is usually better than `var`; `var`'s scope is the enclosing function,
 whereas `let` behaves more sanely and scopes itself to the enclosing block.
 
-```
+```js
 let v = 2;
 ```
 
 `const` indicates that the variable cannot be rebound to a different value.
 
-```
+```js
 let x = 1;
 x = 2; // ERROR
 ```
@@ -176,7 +175,7 @@ A couple of surprising things you might encounter-
 
 # Iterators and Generators
 
-```
+```js
 let y = [1,2,3];
 for (var x of y) {
   console.log(x);
@@ -189,7 +188,7 @@ by creating a function named `Symbol.iterator` on your object, which returns an
 iterator object implementing `next()`. `next()` returns `{done: false, value:
 ...}`.
 
-```
+```js
 let fibonacci = {
   [Symbol.iterator]() {
     let pre = 0, cur = 1;
@@ -210,7 +209,7 @@ powerful async programming.
 
 #`import` and `export`
 
-```
+```js
 // in a library
 export default function() { return "foo" };
 export bar;
@@ -221,11 +220,11 @@ export * from "another/lib";
 import foo, {bar, baz} from Library;
 ```
 
-----
+---
 
 # :symbols
 
-```
+```js
 var key = Symbol("key");
 this[key] = 2; //different from this["key"]
 ```
