@@ -37,9 +37,6 @@ out at es6 fiddle](http://www.es6fiddle.net)
 
 # Classes
 
-The most obvious one is that there is a "blessed" way to create classes
-instead of futzing with prototypes etc.
-
 ```js
 class Foo {
   static foo() {
@@ -48,7 +45,6 @@ class Foo {
 }
 
 class McFoo extends Foo {
-
   // This is a special method, like __init__
   // Also notice the default value
   constructor(quux=2) {
@@ -61,7 +57,11 @@ class McFoo extends Foo {
     console.log(this.baz);
   }
 }
+```
 
+---
+
+```js
 let f = new McFoo(3);
 f.show(); // 3
 
