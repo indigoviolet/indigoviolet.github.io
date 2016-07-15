@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import
+      url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import
+      url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# "Modern" JS
+
+ES6 or ECMAScript2015 is the latest version of the JS language standard. It
+adds a number of new features that are well described in
+[many](https://github.com/lukehoban/es6features),
+[many](http://es6-features.org/) [places](http://es6fiddle.net/) - so I'll just
+highlight a few that I've used in the context of writing JS code on the Agent
+dash. (I'll use some Python terminology to draw parallels). [You can try these
+out at es6 fiddle](http://www.es6fiddle.net)
+
+---
+
+* Classes
+
+The most obvious one is that there is a "blessed" way to create classes
+instead of futzing with prototypes etc.
+
+
+```
+class Foo {
+  static foo() {
+    return "this is an inherited classmethod";
+  }
+}
+
+class McFoo extends Foo {
+
+  // This is a special method, like __init__
+  // Also notice the default value
+  constructor(quux=2) {
+    // construct Foo
+    super();
+    this.baz = quux;
+  }
+
+  show() {
+    console.log(this.baz);
+  }
+}
+
+let f = new McFoo(3);
+f.show(); // 3
+
+(new McFoo()).show(); // 2
+
+console.log(McFoo.foo()); // "this is an...
+```
+---
+
+ES7 property initializers are a proposal that add more familiar syntax
+
+```
+class Foo {
+  static baz = 2;
+  bar = 3;
+}
+```
+This [babel
+transform](http://babeljs.io/docs/plugins/transform-class-properties/) allows
+us to use it today
+
+# Lambdas ("arrow" functions)
+
+```
+var x = (y) => 2*y;
+console.log(x(2)); // 4
+```
+
+---
+
+# String formatting (interpolation, or templating)
+
+```
+var name = "Bob", time = "today";
+`Hello ${name}, how are you ${time}?`
+```
+
+---
+
+
+# Unpacking ("destructuring") assignments
+
+```
+var [a, ,b] = [1,2,3]
+var {a, b} = {"a": 1, "b": 3, "c": 2}
+```
+
+---
+
+
+# "Rest" operator: ...
+
+```
+function more(a, b, ...theRest) {
+  // args is array of the arguments except a, b
+  console.log(theRest.length);
+}
+
+more(1,2,3,4); // 2
+```
+
+---
+
+
+# "spread" operator, which is the inverse of the "rest" operator, but looks
+identical
+
+```
+var parts = ['shoulders', 'knees'];
+var lyrics = ['head', ...parts, 'and', 'toes']; // ["head", "shoulders",
+"knees", "and", "toes"]
+
+```
+
+ While ES6 only specifies Rest and Spread for iterables (ie arrays), there is
+a [proposal to add them to
+objects](https://github.com/sebmarkbage/ecmascript-rest-spread) and a
+corresponding Babel. We have this, which allows us to write
+`<Component {...this.props} />` to pass `props` to child components. (But this
+is an antipattern - see [unknown
+props](https://github.com/finventures/fin-core-beta/wiki/Javascript-Warnings))
+
+---
+
+# `let` and `const`
+
+`let` is usually better than `var`; `var`'s scope is the enclosing function,
+whereas `let` behaves more sanely and scopes itself to the enclosing block.
+
+```
+let v = 2;
+```
+
+`const` indicates that the variable cannot be rebound to a different value.
+
+```
+let x = 1;
+x = 2; // ERROR
+```
+
+A couple of surprising things you might encounter-
+  * `let` doesn't create properties on the enclosing "global" object, so you
+  should still use `var` for this
+  * Multiple `let`s for the same variable in a block will throw an error;
+  `switch` statements are one block, so you can't call `let foo=2` in each
+  `case` section.
+  * `const foo = {"a":2, "b": 3};` does not prevent the RHS obj from being
+  mutated
+
+---
+
+# Iterators and Generators
+
+```
+let y = [1,2,3];
+for (var x of y) {
+  console.log(x);
+}
+```
+
+The cool thing here is that you can define [custom
+iterables](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)
+by creating a function named `Symbol.iterator` on your object, which returns an
+iterator object implementing `next()`. `next()` returns `{done: false, value:
+...}`.
+
+```
+let fibonacci = {
+  [Symbol.iterator]() {
+    let pre = 0, cur = 1;
+    return {
+      next() {
+        [pre, cur] = [cur, pre + cur];
+        return { done: false, value: cur }
+      }
+    }
+  }
+}
+```
+
+ES6 also has a `yield` which makes writing iterables easier, and enables more
+powerful async programming.
+
+---
+
+#`import` and `export`
+
+```
+// in a library
+export default function() { return "foo" };
+export bar;
+export baz;
+export * from "another/lib";
+
+// in a user of the library
+import foo, {bar, baz} from Library;
+```
+
+----
+
+# :symbols
+
+```
+var key = Symbol("key");
+this[key] = 2; //different from this["key"]
+```
+
+---
+
+# `Map`, `Set`, `WeakMap`, `WeakSet`
+
+The weak versions allow objects as keys, and these are weak references.
+
+---
+
+# Proxies
+
+Allow `methodMissing`-style interception
+
+---
+
+# Promises
+
+Encapsulates the pattern of starting async work, and calling `success` or
+`error` callbacks after the work is done. Except that the callbacks can be
+bound on the Promise, they can be chained (piped), parallelized, raced,
+etc. [Read more](http://www.html5rocks.com/en/tutorials/es6/promises/). Mixed
+with generators, these evolve into async/await functions in ES7.
+
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
