@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flow</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Petrona);
+      @import
+      url(https://fonts.googleapis.com/css?family=Secular+One);
+      @import
+      url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Petrona' }
+      h1, h2, h3 {
+        font-family: 'Secular One';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code {
+          font-family: 'Ubuntu Mono';
+          line-height: 125%
+      }
+
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: middle
+
+# Flow
+
+Flow is a compile-time type checker for JS. It allows you to gradually migrate
+the codebase to be type-annotated.
+
+This is awesome, because
+
+1. it catches several kinds of bugs
+2. it encourages well specified interfaces and discourages implicit
+   casting/conversions
+3. it leads to more grokkable code because the annotations function as
+   documentation
+
+---
+
+# Running flow
+
+In your docker container (need to have pulled a recent image)
+
+```js
+npm run flow
+
+components/CategoryComposer.js:68
+ 68:         var alertText = this._getAlertText(newMinutesWorked);
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of
+ method `_getAlertText`
+  68:         var alertText = this._getAlertText(newMinutesWorked);
+                                                  ^^^^^^^^^^^^^^^^ number. This
+ type is incompatible with
+ 158:   _getAlertText = (minutesWorked: string): string => {
+                                        ^^^^^^ string
+```
+
+---
+
+# Mark a file for checking
+
+```js
+// @flow
+
+...
+
+```
+
+---
+
+# Type annotations
+
+```js
+// Takes Array<number>, and returns a nullable number
+function avg(vals: [number]): ?number {
+  if (!vals.length) {
+    return null;
+  }
+  return _.reduce(vals, (s, v) => s + (v || 0), 0.0) * 1.0 / vals.length;
+};
+
+```
+
+- Not typing everything^ - just enough that it's valuable. Flow can infer a lot
+- You have to type things that are exported between modules.
+- Type annotations get stripped out during transpilation
+
+---
+
+# A React Component
+
+```js
+class Foo extends React.Component {
+
+  render(): React.Element<any> {
+    ...
+  }
+}
+
+```
+
+---
+
+# Variables
+
+```js
+
+let v: string = "3";
+
+class Foo {
+  // declare a boolean member that can be null
+  isFoo: ?boolean;
+
+  static baz: number = 3;
+}
+
+```
+
+---
+
+# More types
+
+```js
+
+?[number] // nullable array of numbers
+[?number] // array of nullable numbers
+
+let foo: [boolean, string] = [true, "3"]; // tuples
+
+let bar: {a: string, b: number} = {a: "3", b: 2} // objects as records/shapes
+
+let users: {[id: string]: Object} = ... // objects as maps. Also note the dumb Object type
+
+// function types
+function doCallback(cb: (v: number) => void): void {
+    cb()
+};
+
+```
+
+---
+
+# Classes and Interfaces
+
+```js
+
+function hoc(c: React.Component): React.Component {
+  ...
+}
+
+interface Fooable {
+  foo(): string;
+}
+
+let foo: Fooable = new AFoo();
+
+// a type representing the Class itself (not instances of the class)
+let componentKlass = Class<MyComponent>;
+
+```
+
+---
+
+# Custom types
+
+```js
+
+type Props = {
+    threadId: number,
+    shouldRender: boolean
+};
+
+class Foo extends React.Component {
+    props: Props;
+}
+
+```
+
+---
+
+# Generics
+
+```js
+
+type GenericObject<T> = { foo: T };
+var numberObject: GenericObject<number> = { foo: 0 };
+var stringObject: GenericObject<string> = { foo: "foo" };
+
+```
+
+---
+
+# Unions & enums
+
+```js
+
+type U = number | string;
+
+type Queue = "working" | "triage";
+
+// Can also do intersections
+```
+
+---
+
+# Prove to Flow that you're doing the right thing
+
+
+```js
+function foo(x: ?string): string {
+    if (x == null) {
+        return x; // error
+    } else {
+        return x; // this is ok
+    }
+}
+
+```
+
+Other proofs:
+
+```js
+
+A instanceof B
+
+if typeof x === "object"
+
+if Array.isArray
+
+```
+
+---
+
+
+# Escape valves, when Flow gets it wrong
+
+```js
+var x: any; // don't check this!
+
+var y: mixed; // unknown type, but flow will require proof for some uses
+
+// $FlowIssue
+let ... // statement that is right but Flow gets wrong
+
+// $FlowFixMe
+let ... // known problem
+
+```
+
+---
+
+# Documentation alone
+
+```js
+type Thread = Object;
+
+
+function foo(t: Thread) {
+    ...
+}
+
+```
+
+Allows `Thread` to be better specified in the future
+
+---
+
+# Declarations
+
+- Can install "typehint" libraries that annotate various common libraries, to
+check code that passes through  - ex. `Redux`, `Moment` etc.
+
+- `flow-typed` tool to install these
+
+---
+
+# React
+
+- components `extends React.Component`
+- annotate `props` and `state`
+- `render()` returns `React.Element<any>`
+- Replace `getInitialState` with assignment in constructor or declaration
+- Replace `getDefaultProps` with declaration of `static defaultProps`
+- Name private methods as `_foo()`
+- Use autobinding function declaration style
+
+---
+
+```js
+type P = {
+  threadId: number,
+  baz: string
+};
+
+class Button extends React.Component {
+  props: P;
+  static defaultProps = {
+    baz: "baz"
+  };
+  state: {
+    qualified: boolean
+  };
+
+  constructor(props: P): void {
+    super(props);
+    this.state = {
+        qualified: true;
+    };
+  }
+
+  render(): React.Element<any> {
+    return this._renderButton();
+  }
+
+  _renderButton = (): React.Element<any> => {
+    ...
+  }
+}
+
+```
+
+---
+
+# Imports and Exports for types
+
+```js
+export type Window;
+import type {WindowT} from './data_types';
+```
+
+
+    </textarea>
+    <script src="https://rawgit.com/gnab/remark/gh-pages/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
